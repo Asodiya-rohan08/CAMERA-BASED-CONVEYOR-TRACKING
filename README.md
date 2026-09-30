@@ -66,9 +66,11 @@ Set `--cols` and `--rows` to the checkerboard's inner-corner count, and `--squar
 
 ## Outputs
 Generated results are written to `output/`, including:
-- `pipeline_out.mp4` - annotated video with tracked boxes.
+- `pipeline_output.mp4` - annotated pipeline example video (synthetic validation data).
 - `pipeline_results.csv` - per-track size, speed, and predicted class.
 - Module plots and visualisations, such as segmentation, calibration, optical-flow, tracking, and recognition results.
+
+See [`output/README.md`](output/README.md) for the source of each checked-in result and the real-video versus synthetic-validation distinction.
 
 ## Scope and Limitations
 - Results depend on camera stability, lighting, calibration quality, and representative training crops.
