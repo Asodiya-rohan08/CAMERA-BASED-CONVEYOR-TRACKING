@@ -1,7 +1,6 @@
 .venv/
 __pycache__/
 *.py[cod]
-/output/
 /B_calibration/calib.npz
 /data/raw/
 /data/calib/
