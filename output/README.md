@@ -1,7 +1,5 @@
 # Project Outputs
 
-Files are kept directly in this folder and named by module.
-
 ## Module Results
 - `module_a_comparison_grid.png` - Module A, synthetic validation video.
 - `module_a_comparison_grid_video11.png` - Module A, provided `VEDIO11.mp4`.
