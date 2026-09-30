@@ -1,41 +1,59 @@
 # Camera-Based Conveyor Inspection & Tracking
 
-A classical computer-vision project that detects and tracks boxes in conveyor video, estimates their size and speed, and recognises box types. It uses OpenCV and does not require pretrained AI models.
+A modular computer-vision project for detecting and tracking boxes in conveyor footage. The system estimates object dimensions and motion, and classifies boxes using labelled image crops. It is implemented with classical computer-vision techniques and does not rely on pretrained detection models.
+
+## Project Objectives
+- Detect box regions in video frames using image segmentation.
+- Track detected objects across frames, including short detection gaps.
+- Estimate object size and speed using camera calibration and optical flow.
+- Classify objects into box types using image-based features.
+- Combine the modules in one pipeline and export results for inspection.
 
 ## Modules
-- **A - Segmentation:** compares segmentation methods and detects boxes.
-- **B - Calibration:** calibrates the camera and estimates box dimensions.
-- **C - Optical flow:** estimates object motion and speed.
-- **D - Tracking:** follows boxes with a Kalman filter.
-- **E - Recognition:** classifies boxes from labelled image crops.
-- **Pipeline:** combines the modules and saves annotated video and results.
+| Module | Main approach | Result |
+|---|---|---|
+| A - Segmentation | Compares snake, split/merge, watershed, Felzenszwalb, mean shift, and normalized-cut methods. | Segmentation comparison grid and box detections. |
+| B - Calibration | Uses checkerboard images with `cv2.calibrateCamera`; estimates the belt plane and supports box-size measurement. | Camera parameters, calibration data, and visualisation. |
+| C - Optical flow | Implements Lucas-Kanade flow and fits an affine motion model with RANSAC. | Motion visualisation and speed estimate. |
+| D - Tracking | Uses a constant-velocity Kalman filter and Hungarian assignment for multi-object association. | Track plot and annotated tracking video. |
+| E - Recognition | Compares ORB alignment, PCA eigenboxes, and Hu-moment descriptors. | Recognition metrics and eigenbox visualisation. |
 
-## Setup
-Use Python 3.10 or newer. From the project folder, install dependencies:
-```bash
-python -m pip install -r requirements.txt
+The integrated `pipeline.py` connects detection, tracking, calibration, motion estimation, and recognition. It reports per-track measurements and saves an annotated video and CSV summary.
+
+## Data
+Input data is not included. Provide data in the following layout:
+```text
+data/
+	video.mp4
+	calib/                 # Checkerboard calibration images
+	boxes/
+		typeA/               # Labelled crop images for each box type
+		typeB/
+		typeC/
 ```
 
-## Input data
-Add your own files; video and sample datasets are not included in this repository.
-- Conveyor video: `data/video.mp4`
-- Checkerboard photos: `data/calib/`
-- Labelled box crops: `data/boxes/<type>/`
+Use a fixed camera and include some frames where the belt is visible without boxes. Calibration images should use the same camera resolution as the video; one checkerboard image should show the board flat on the belt. For recognition, create one folder per class and add representative cropped images. The included `E_recognition/collect_crops.py` can help collect crops from video.
 
-To create one video from clips or image frames in `data/raw/`:
+To combine source clips or image frames stored in `data/raw/`:
 ```bash
 python data/prepare_video.py --source-dir data/raw --out data/video.mp4
 ```
 
-You can generate synthetic data for a code-only test with `python make_test_data.py`. Synthetic results are not real-world measurements.
+For a code-only smoke test, `python make_test_data.py` generates a synthetic dataset. Synthetic data is useful for checking the pipeline, but is not evidence of real-world accuracy.
 
-## Run
-Run the complete project from the repository root:
+## Installation
+Python 3.10 or newer is recommended. Install dependencies from the repository root:
+```bash
+python -m pip install -r requirements.txt
+```
+
+## Running the Project
+Run the complete pipeline:
 ```bash
 python pipeline.py --video data/video.mp4 --box_h 4.0
 ```
 
-Run individual modules when needed:
+Run a module separately for development or inspection:
 ```bash
 python A_segmentation/segmentation.py --video data/video.mp4
 python B_calibration/calibrate.py --images "data/calib/*.jpg" --cols 9 --rows 6 --square_cm 2.5 --belt_idx 0
@@ -44,12 +62,15 @@ python D_tracking/kalman_tracker.py --video data/video.mp4
 python E_recognition/recognize.py
 ```
 
-For calibration, set `--cols`, `--rows`, and `--square_cm` to match your checkerboard. Set `--box_h` to the height of the box above the belt.
+Set `--cols` and `--rows` to the checkerboard's inner-corner count, and `--square_cm` to the physical square size. Set `--box_h` to the box-top height above the belt.
 
 ## Outputs
-Generated files are saved in `output/`, including the annotated pipeline video, a CSV of tracked boxes, and module visualisations.
+Generated results are written to `output/`, including:
+- `pipeline_out.mp4` - annotated video with tracked boxes.
+- `pipeline_results.csv` - per-track size, speed, and predicted class.
+- Module plots and visualisations, such as segmentation, calibration, optical-flow, tracking, and recognition results.
 
-## Notes
-- Keep the camera fixed and use consistent lighting.
-- Calibration photos and video should have the same resolution.
-- Results depend on the quality of the video, calibration, and labelled box crops.
+## Scope and Limitations
+- Results depend on camera stability, lighting, calibration quality, and representative training crops.
+- Perfectly touching boxes without a visible boundary may be detected as one object.
+- Synthetic data validates code execution only; evaluate accuracy using real footage and real calibration data.
